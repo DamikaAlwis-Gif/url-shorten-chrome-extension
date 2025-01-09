@@ -41,6 +41,10 @@ func main(){
 	redisClient := database.InitRedis()
 	defer redisClient.Close() // close connection when the app shuts down
 
+	// connect to the MongoDB db
+	database.InitMongoDB()
+	defer database.CloseMongoDBConnection()
+
 	routes.SetupRoutes(r)
 	r.Run(AppConfig.AppPort)
 
