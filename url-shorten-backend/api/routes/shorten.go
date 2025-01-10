@@ -53,14 +53,38 @@ func get_short(custom_short string) (string, error){
 
 func set_short_url(short_url string, original_url string, expiry time.Duration) (error) {
 	rdb := database.GetRedisClient()
+	url_collection := database.GetCollection("url_shortener","urls")
 	var err error
 
 	// if expiry is not provided, set it to 24 hours (default)
 	if expiry == 0{
 		expiry = time.Duration(24)
 	}
+	
+	count , err := rdb.Exists(database.Ctx, short_url).Result()
+	if err != nil {
+		log.Print(err.Error())
+    return err
+	}  
 
-  short_key := fmt.Sprintf("short:%s", short_url)
+	if count >0 {
+		
+	}else{
+		// if short key doesn't exist -> set it
+		if err == redis.Nil{
+			err = rdb.Set(database.Ctx, short_key, original_url, expiry * time.Hour).Err()
+  		if err!= nil {
+    		log.Print(err.Error())
+    		return  err
+  		}
+  		return nil
+		}
+		log.Print(err.Error())
+		return err
+	}
+
+	}
+
 	_, err = rdb.Get(database.Ctx,short_key).Result()
 	// if there is an error -> short key already exists
 	if err == nil{

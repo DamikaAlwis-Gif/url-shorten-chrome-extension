@@ -1,70 +1,85 @@
 package database
 
-import(
+import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"sync"
 	"time"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-
 )
 
-var mongo_client *mongo.Client
-var once sync.Once
+type MongoDB struct{
+	Client *mongo.Client
+	once sync.Once
 
-func InitMongoDB(){
-	once.Do( func(){
+}
+func (db *MongoDB)InitDB(parentCtx context.Context) error{
+
+	var initErr error
+	db.once.Do( func(){
+
+		// Set up a timeout context for the connection
+		ctx, cancel := context.WithTimeout(parentCtx, 10*time.Second)
+		defer cancel()
+
 		mongoURI := os.Getenv("MONGODB_URI")
 		if mongoURI == "" {
-			log.Fatal("Missing MONGODB_URI environment variable")
+			initErr = fmt.Errorf("missing MONGODB_URI environment variable")
+			return
 		}
 		// Set client options
 		clientOptions := options.Client().ApplyURI(mongoURI)
 
-		// Set up a timeout context for the connection
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
 		// connect to MongoDB
-		var err error 
-		mongo_client, err = mongo.Connect(ctx, clientOptions)
+		var err error
+		db.Client, err = mongo.Connect(ctx, clientOptions)
 		if err!= nil{
-			log.Fatalf("Failed to connect to MongoDB: %v", err)
+			initErr = fmt.Errorf("failed to connect to MongoDB at URI %s: %w", mongoURI, err)
+			return
 		}
 
 		// Test the connection
-		err = mongo_client.Ping(ctx, nil)
+		err = db.Client.Ping(ctx, nil)
 		if err!= nil{
-      log.Fatalf("Failed to ping MongoDB: %v", err)
+			initErr = fmt.Errorf("failed to ping MongoDB: %w", err)
+			return
     }
-		log.Println("Connected to MongoDB!")
+		log.Println("connected to MongoDB!")
 
 	})
+	return initErr
 	
 }
 
 // get mongodb client instance
-func GetMongoClient() *mongo.Client {
-	if mongo_client == nil{
+func (db *MongoDB)GetDBClient(parentCtx context.Context) (*mongo.Client, error) {
+	if db.Client == nil{
 		log.Println("MongoDB client not initialized. Initializing now...")
-		InitMongoDB()
+		if err := db.InitDB(parentCtx); err != nil {
+			return nil, err
+		}
 	}
-	return mongo_client  
+	return db.Client, nil
 }
+
 // get a specific MongoDB collection
-func GetCollection(databaseName string, collectionName string) *mongo.Collection {
-	return mongo_client.Database(databaseName).Collection(collectionName)
+func (db *MongoDB)GetCollection(databaseName string, collectionName string) (*mongo.Collection, error) {
+	if db.Client == nil{
+		return nil, fmt.Errorf("MongoDB client is not initialized")
+	}
+	return db.Client.Database(databaseName).Collection(collectionName), nil
 }
 
 //claose the MongoDB connection
-
-func CloseMongoDBConnection(){
-	if mongo_client != nil{
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+func (db *MongoDB) CloseDBConnection(parentCtx context.Context){
+	if db.Client != nil{
+		ctx, cancel := context.WithTimeout(parentCtx, 10*time.Second)
 		defer cancel()
-		err := mongo_client.Disconnect(ctx)
+
+		err := db.Client.Disconnect(ctx)
 		if err!= nil{
 			log.Printf("Failed to disconnect MongoDB: %v", err)
 		}else {
