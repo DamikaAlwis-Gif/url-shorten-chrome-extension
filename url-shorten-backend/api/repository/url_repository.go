@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func FetchOriginalURLPersistantDB(ctx context.Context, shortURL string) (string, error) {
+func fetchOriginalURLPersistantDB(ctx context.Context, shortURL string) (string, error) {
 	// get mongo client
   mdb:= &database.MongoDB{}
 	collection, err := mdb.GetCollection("url_shortner","urls")
@@ -45,7 +45,7 @@ func FetchOriginalURLPersistantDB(ctx context.Context, shortURL string) (string,
   return result.OriginalURL, nil
 }
 
-func FetchOriginalURLCache(ctx context.Context,shortURL string)(string, error){
+func fetchOriginalURLCache(ctx context.Context,shortURL string)(string, error){
 	rdb := &database.Redis{}
   redisClient, err := rdb.GetDBClient(ctx)
   if err!= nil {
@@ -71,8 +71,8 @@ func FetchOriginalURLCache(ctx context.Context,shortURL string)(string, error){
 }
 
 
-// CacheOriginalURL caches the original URL in Redis.
-func CacheOriginalURL(ctx context.Context, shortURL string, originalURL string) error {
+// cacheOriginalURL caches the original URL in Redis.
+func cacheOriginalURL(ctx context.Context, shortURL string, originalURL string) error {
 	rdb := &database.Redis{}
 	redisClient, err := rdb.GetDBClient(ctx)
 	if err != nil {
@@ -93,17 +93,17 @@ func CacheOriginalURL(ctx context.Context, shortURL string, originalURL string) 
 
 
 func ResolveShortURL(ctx context.Context, shortURL string) (string, error) {
-    originalURL, err := FetchOriginalURLCache(ctx, shortURL)
+    originalURL, err := fetchOriginalURLCache(ctx, shortURL)
     if err == nil {
         return originalURL, nil
     }
     if !errors.Is(err, custom_errors.ErrShortURLNotFound) {
         return "", err
     }
-    originalURL, err = FetchOriginalURLPersistantDB(ctx, shortURL)
+    originalURL, err = fetchOriginalURLPersistantDB(ctx, shortURL)
     if err != nil {
         return "", err
     }
-    _ = CacheOriginalURL(ctx, shortURL, originalURL) // Ignore caching errors
+    _ = cacheOriginalURL(ctx, shortURL, originalURL) // Ignore caching errors
     return originalURL, nil
 }
