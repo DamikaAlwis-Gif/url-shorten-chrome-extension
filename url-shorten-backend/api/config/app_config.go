@@ -11,7 +11,7 @@ type Config struct {
 	RedisDbPass string
 	AppPort  string
 	Host string
-	APIQuoata   int
+	APIQuota   int
 	QuotaResetTime  time.Duration
 }
 var AppConfig *Config
@@ -22,7 +22,7 @@ func LoadConfig() *Config{
     RedisDbPass:     getEnv("REDIS_DB_PASS", ""),
     AppPort:         getEnv("APP_PORT", "8080"),
     Host:           getEnv("HOST", "localhost"),
-    APIQuoata:       getEnvAsInt("API_QUOTA", 10),
+    APIQuota:       getEnvAsInt("API_QUOTA", 10),
     QuotaResetTime: getEnvAsDuration("QUOTA_RESET_TIME", 30), 
 		
 	}
