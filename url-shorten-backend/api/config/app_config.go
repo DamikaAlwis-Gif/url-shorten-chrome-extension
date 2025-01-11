@@ -13,6 +13,7 @@ type Config struct {
 	Host string
 	APIQuota   int
 	QuotaResetTime  time.Duration
+	
 }
 var AppConfig *Config
 func LoadConfig() *Config{

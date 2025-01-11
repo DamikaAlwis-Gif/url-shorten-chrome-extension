@@ -3,15 +3,14 @@ package main
 import (
 	"context"
 	"log"
-
 	"github.com/DamikaAlwis-Gif/shorten-url-app/config"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/database"
+	"github.com/DamikaAlwis-Gif/shorten-url-app/service"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/routes"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
-
 
 func main(){
 	r := gin.Default()
@@ -56,7 +55,9 @@ func main(){
 	}
 	defer mongoDB.CloseDBConnection(ctx)
 
-	routes.SetupRoutes(r)
+	srv := &service.Service{Redis: redis, MongoDB: mongoDB}
+
+	routes.SetupRoutes(r, srv )
 	r.Run(AppConfig.AppPort)
 
 }

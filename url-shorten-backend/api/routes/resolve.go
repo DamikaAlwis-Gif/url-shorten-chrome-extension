@@ -1,23 +1,24 @@
 package routes
 
 import (
-	"time"
 	"context"
-	"fmt"
 	"errors"
+	"fmt"
 	"net/http"
-	"github.com/gin-gonic/gin"
-	"github.com/DamikaAlwis-Gif/shorten-url-app/repository"
+	"time"
+
 	"github.com/DamikaAlwis-Gif/shorten-url-app/custom_errors"
-	
+	"github.com/DamikaAlwis-Gif/shorten-url-app/repository"
+	"github.com/DamikaAlwis-Gif/shorten-url-app/service"
+	"github.com/gin-gonic/gin"
 )
 
-func resolveURL(c *gin.Context){
+func resolveURL(c *gin.Context, srv *service.Service){
 	ctx := c.Request.Context()
 	shortURL := c.Param("url")
 	
 	// Resolve the URL
-  originalURL, err := repository.ResolveShortURL(ctx, shortURL)
+  originalURL, err := repository.ResolveShortURL(ctx, srv, shortURL)
 	
   if err != nil {
     if errors.Is(err, custom_errors.ErrShortURLNotFound) {
@@ -32,7 +33,7 @@ func resolveURL(c *gin.Context){
 
 		logCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
-		err := repository.LogClick(logCtx, shortURL, c.ClientIP(), c.Request.UserAgent())
+		err := repository.LogClick(logCtx,srv, shortURL, c.ClientIP(), c.Request.UserAgent())
 		if err!= nil {
 			fmt.Printf("Error logging click for short URL %s: %v\n", shortURL, err)
 		}

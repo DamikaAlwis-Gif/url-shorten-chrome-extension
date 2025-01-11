@@ -48,14 +48,8 @@ func (r *Redis) InitDB(parentCtx context.Context) error {
 }
 
 // GetRedisClient returns the Redis client instance
-func (r *Redis) GetDBClient(parentCtx context.Context) (*redis.Client, error) {
-	if r.Client == nil{
-	 log.Println("Redis client not initialized. Initializing now...")
-	 if err := r.InitDB(parentCtx); err != nil {
-		return nil, err
-	 }
-	}
-	return r.Client, nil
+func (r *Redis) GetDBClient() (*redis.Client) {
+	return r.Client
 }
 
 // CloseRedisConnection closes the Redis connection

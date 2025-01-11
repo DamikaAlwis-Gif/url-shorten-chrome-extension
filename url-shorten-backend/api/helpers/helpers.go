@@ -1,19 +1,17 @@
 package helpers
 
 import (
+	"fmt"
 	"math/big"
 	"net/url"
 	"os"
 	"strings"
-	"fmt"
 	"github.com/google/uuid"
-	
 )
 func IsDomainURL(url_string string) (bool, error) {
 	parsed_url , err := url.Parse(url_string) ; if err != nil {
 		return false, err
 	}
-	
 
 	if parsed_url.Host == os.Getenv("HOST"){
 		return true, nil
@@ -37,7 +35,7 @@ func customBaseEncode(num *big.Int, char_set string) string{
 	return encoded.String()
 }
 
-func GenarateShortCode(length int) (string , error) {
+func genarateShortCode(length int) (string , error) {
 	const char_set = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 	uuid := uuid.New()// genarate uuid
 	num := new(big.Int).SetBytes(uuid[:]) // genarate a number from uuid
@@ -48,3 +46,24 @@ func GenarateShortCode(length int) (string , error) {
 	return short_code[:length], nil
 
 }
+
+func GetShort(custom_short string) (string, error){
+
+	var id string
+	var err error
+
+	// there is no custom short given by user, genarate a new short
+	if custom_short == "" {
+		id, err = genarateShortCode(6)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		// if a custom short given
+		id = custom_short
+	}
+	return id, nil
+	
+}
+
+

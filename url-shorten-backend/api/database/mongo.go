@@ -55,14 +55,9 @@ func (db *MongoDB)InitDB(parentCtx context.Context) error{
 }
 
 // get mongodb client instance
-func (db *MongoDB)GetDBClient(parentCtx context.Context) (*mongo.Client, error) {
-	if db.Client == nil{
-		log.Println("MongoDB client not initialized. Initializing now...")
-		if err := db.InitDB(parentCtx); err != nil {
-			return nil, err
-		}
-	}
-	return db.Client, nil
+func (db *MongoDB)GetDBClient() *mongo.Client{
+	
+	return db.Client
 }
 
 // get a specific MongoDB collection

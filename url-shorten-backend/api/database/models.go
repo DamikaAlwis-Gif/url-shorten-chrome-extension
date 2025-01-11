@@ -8,7 +8,6 @@ type ShortenURL struct{
 	ShortURL string `bson:"short_url"`
 	OriginalURL string `bson:"original_url"`
 	CreatedAt time.Time `bson:"created_at"`
-	Clicks int `bson:"clicks"`
 	Expiry time.Time `bson:"expiry"`
 }
 
