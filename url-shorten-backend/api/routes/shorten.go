@@ -2,12 +2,15 @@ package routes
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
+
 	"github.com/DamikaAlwis-Gif/shorten-url-app/config"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/custom_errors"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/helpers"
+
 	// "github.com/DamikaAlwis-Gif/shorten-url-app/repository"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/service"
 	"github.com/asaskevich/govalidator"
@@ -64,11 +67,12 @@ func shortenURL(c *gin.Context, urlSrv *service.URLService, rateLimitSrv *servic
 	shortCode , err := urlSrv.CreateShortURL(ctx, req.CustomShort,isCustom,req.URL, expiry )
 	if err != nil {
 		if errors.Is(err, custom_errors.ErrShortKeyExists) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			fmt.Print(err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"error": "short url already exists"})
 			return
 		}
 		log.Print(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return 
   }
 
@@ -90,7 +94,7 @@ func shortenURL(c *gin.Context, urlSrv *service.URLService, rateLimitSrv *servic
 	
 	shortURL := config.AppConfig.Host + "/"+ shortCode
 
-	response := response{URL: req.URL, ShortURL : shortURL, Expiry: expiry, XRateRemaining: remainingQuota, XRateLimitReset: time.Duration(resetAfter.Minutes())}
+	response := response{URL: req.URL, ShortURL : shortURL, Expiry: time.Duration(expiry.Hours()), XRateRemaining: remainingQuota, XRateLimitReset: time.Duration(resetAfter.Minutes())}
 
 	c.JSON(http.StatusOK, response)
 

@@ -73,7 +73,7 @@ func (s *URLService) CreateShortURL(ctx context.Context, shortCode string, isCus
     // save the original url in DB
     err := s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry)
     if err!= nil {
-        return "", fmt.Errorf("error saving original url to db: %v", err)
+        return "", fmt.Errorf("error saving original url to db: %w", err)
     }
 
     // save the original  url in cache 
