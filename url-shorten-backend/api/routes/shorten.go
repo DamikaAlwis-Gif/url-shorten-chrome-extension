@@ -8,7 +8,7 @@ import (
 	"github.com/DamikaAlwis-Gif/shorten-url-app/config"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/custom_errors"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/helpers"
-	"github.com/DamikaAlwis-Gif/shorten-url-app/repository"
+	// "github.com/DamikaAlwis-Gif/shorten-url-app/repository"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/service"
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
@@ -32,7 +32,7 @@ type response struct {
 
 
 
-func shortenURL(c *gin.Context, srv *service.Service){
+func shortenURL(c *gin.Context, urlSrv *service.URLService, rateLimitSrv *service.RateLimitService){
 	// validate request body
 	var req request
 	// get http request context
@@ -43,7 +43,7 @@ func shortenURL(c *gin.Context, srv *service.Service){
     c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
     return
   }
-
+	isCustom := req.CustomShort != ""
 	// check if the input is an actual url
 	if !govalidator.IsURL(req.URL){
 		c.JSON(http.StatusBadRequest, gin.H{"error":"Invalid URL"})
@@ -56,10 +56,12 @@ func shortenURL(c *gin.Context, srv *service.Service){
 		return
 	}else if isDomainURL {
 		c.JSON(http.StatusBadRequest, gin.H{"error" : "Can't use this URL"})
+		return
 	}  
 	expiry := time.Duration(req.Expiry) * time.Hour // convert the hours
 	// set the short url in persistent storage and cache 
-	shortCode, err := repository.SetShortURL(ctx, srv, req.CustomShort, req.URL, expiry)
+	// shortCode, err := repository.SetShortURL(ctx, srv, req.CustomShort, req.URL, expiry)
+	shortCode , err := urlSrv.CreateShortURL(ctx, req.CustomShort,isCustom,req.URL, expiry )
 	if err != nil {
 		if errors.Is(err, custom_errors.ErrShortKeyExists) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -69,16 +71,22 @@ func shortenURL(c *gin.Context, srv *service.Service){
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return 
   }
+
 	// get remaing rate and rate reset time
 	ipAddress := c.ClientIP()
-	rateLimitResonse, err := repository.GetRateLimit(ctx,srv, ipAddress)
+	remainingQuota, err := rateLimitSrv.DecrementQuota(ctx, ipAddress)
 	if err!= nil {
-    log.Printf("Error getting rate limit for IP %s: %v", ipAddress, err)
+    log.Printf("Error decrementing quota for IP %s: %v", ipAddress, err)
     c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
     return
   }
-	remainingQuota := rateLimitResonse.RemainingQuota
-	resetAfter := rateLimitResonse.ResetAfter
+	resetAfter, err := rateLimitSrv.GetQuotaResetTime(ctx,ipAddress)
+	if err!= nil {
+    log.Printf("Error getting quota reset time for IP %s: %v", ipAddress, err)
+    c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+    return
+  }
+
 	
 	shortURL := config.AppConfig.Host + "/"+ shortCode
 
