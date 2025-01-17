@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"log"
+
 	"github.com/DamikaAlwis-Gif/shorten-url-app/config"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/database"
-	"github.com/DamikaAlwis-Gif/shorten-url-app/service"
+	"github.com/DamikaAlwis-Gif/shorten-url-app/repository"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/routes"
+	"github.com/DamikaAlwis-Gif/shorten-url-app/service"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -26,40 +28,52 @@ func main(){
 	AppConfig := config.LoadConfig()
 	log.Printf("Loaded .env file: %v", AppConfig)
 
-	// Define CORS configuration
+	// Set up CORS configuration
+	setupCORS(r)
+
+	// Initialize databases
+	redis, mongoDB := initializeDatabases(ctx)
+	defer redis.CloseDBConnection()
+	defer mongoDB.CloseDBConnection(ctx)
+
+	
+	dbRepo := repository.NewMongoRepository(mongoDB.GetDBClient())
+	cacheRepo := repository.NewRedisRepository(redis.GetDBClient())
+	srv := service.NewAppService(cacheRepo, dbRepo)
+
+	routes.SetupRoutes(r, srv)
+	r.Run(AppConfig.AppPort)
+
+}
+
+
+
+// setupCORS configures the CORS middleware for the Gin router.
+func setupCORS(r *gin.Engine) {
 	corsConfig := cors.Config{
-		// Allow all origins (can also restrict to specific domains)
-		AllowOrigins: []string{"*"}, // "*" allows all origins, replace with specific domains for tighter security
-		// Allow HTTP methods (GET, POST, PUT, DELETE, etc.)
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		// Allow specific headers
-		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
-		// Allow credentials (cookies, authorization headers, etc.)
+		AllowOrigins:     []string{"*"}, // Replace "*" with specific domains for security
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}
-
-	// Use CORS middleware with the specified configuration
 	r.Use(cors.New(corsConfig))
+}
 
-	// connect to the redis db
+
+// initializeDatabases sets up connections to Redis and MongoDB.
+func initializeDatabases(ctx context.Context) (*database.Redis, *database.MongoDB) {
+	// Initialize Redis
 	redis := &database.Redis{}
 	if err := redis.InitDB(ctx); err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
-	defer redis.CloseDBConnection()
 
-	// connect to the MongoDB db
+	// Initialize MongoDB
 	mongoDB := &database.MongoDB{}
 	if err := mongoDB.InitDB(ctx); err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
-	defer mongoDB.CloseDBConnection(ctx)
 
-	
-
-	srv := &service.Service{Redis: redis, MongoDB: mongoDB}
-
-	routes.SetupRoutes(r, srv )
-	r.Run(AppConfig.AppPort)
-
+	return redis, mongoDB
 }
+
