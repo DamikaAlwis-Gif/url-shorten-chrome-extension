@@ -12,7 +12,7 @@ func SetupRoutes(r *gin.Engine, srv *service.Service){
 	r.POST("/shorten",middleware.RateLimitMiddleware(srv), func( c *gin.Context){
 		shortenURL(c, srv)
 	})
-	r.GET("/:url", func(c *gin.Context){
+	r.GET("/:short_code", func(c *gin.Context){
 		resolveURL(c, srv)
 	})
 	r.GET("/", func(c *gin.Context){

@@ -5,10 +5,11 @@ import(
 )
 
 type ShortenURL struct{
-	ShortURL string `bson:"short_url"`
+	ShortCode string `bson:"short_code"`
 	OriginalURL string `bson:"original_url"`
 	CreatedAt time.Time `bson:"created_at"`
 	Expiry time.Time `bson:"expiry"`
+	IsCustom bool `bson:"is_custom"`
 }
 
 type Click struct{

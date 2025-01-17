@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 	"time"
 	"github.com/go-redis/redis/v8"
+	"github.com/DamikaAlwis-Gif/shorten-url-app/config"
 )
 
 // Redis struct to hold the Redis client and sync.Once
@@ -24,13 +24,14 @@ func (r *Redis) InitDB(parentCtx context.Context) error {
 		ctx, cancel := context.WithTimeout(parentCtx, 10*time.Second)
 		defer cancel()
 
-		if os.Getenv("REDIS_ADDR") == "" {
+		if config.AppConfig.RedisDbAddr == "" {
       err = fmt.Errorf("missing REDIS_ADDR in environment variable")
       return
     }
 		r.Client = redis.NewClient(&redis.Options{
-			Addr:     os.Getenv("REDIS_ADDR"),  // Redis address (e.g., "localhost:6379")
-			Password: os.Getenv("REDIS_PASSWORD"), // Redis password if any
+			Addr:     config.AppConfig.RedisDbAddr,  // Redis address (e.g., "localhost:6379")
+			Password: config.AppConfig.RedisDbPass,
+			Username: config.AppConfig.RedisDbUsername, // Redis password if any
 			DB:       0,                          // Default DB
 			PoolSize: 10,                         // Pool size for Redis connections
 		})

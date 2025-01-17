@@ -55,6 +55,8 @@ func main(){
 	}
 	defer mongoDB.CloseDBConnection(ctx)
 
+	
+
 	srv := &service.Service{Redis: redis, MongoDB: mongoDB}
 
 	routes.SetupRoutes(r, srv )

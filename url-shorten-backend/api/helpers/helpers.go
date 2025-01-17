@@ -35,7 +35,7 @@ func customBaseEncode(num *big.Int, char_set string) string{
 	return encoded.String()
 }
 
-func genarateShortCode(length int) (string , error) {
+func GenarateShortCode(length int) (string , error) {
 	const char_set = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 	uuid := uuid.New()// genarate uuid
 	num := new(big.Int).SetBytes(uuid[:]) // genarate a number from uuid
@@ -54,7 +54,7 @@ func GetShort(custom_short string) (string, error){
 
 	// there is no custom short given by user, genarate a new short
 	if custom_short == "" {
-		id, err = genarateShortCode(6)
+		id, err = GenarateShortCode(6)
 		if err != nil {
 			return "", err
 		}

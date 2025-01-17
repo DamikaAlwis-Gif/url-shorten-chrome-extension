@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
 	"github.com/DamikaAlwis-Gif/shorten-url-app/custom_errors"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/repository"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/service"
@@ -15,7 +14,9 @@ import (
 
 func resolveURL(c *gin.Context, srv *service.Service){
 	ctx := c.Request.Context()
-	shortURL := c.Param("url")
+	shortURL := c.Param("short_code")
+
+
 	
 	// Resolve the URL
   originalURL, err := repository.ResolveShortURL(ctx, srv, shortURL)

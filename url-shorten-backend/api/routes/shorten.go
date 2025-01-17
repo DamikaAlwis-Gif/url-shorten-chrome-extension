@@ -18,7 +18,7 @@ import (
 type request struct {
 	URL          string         `json:"url"`
 	CustomShort  string         `json:"short"`
-	Expiry			 time.Duration  `json:"expiry"`
+	Expiry			 int  					`json:"expiry"`
 }
 
 type response struct {
@@ -57,9 +57,9 @@ func shortenURL(c *gin.Context, srv *service.Service){
 	}else if isDomainURL {
 		c.JSON(http.StatusBadRequest, gin.H{"error" : "Can't use this URL"})
 	}  
-	
+	expiry := time.Duration(req.Expiry) * time.Hour // convert the hours
 	// set the short url in persistent storage and cache 
-	shortCode, err := repository.SetShortURL(ctx, srv, req.CustomShort, req.URL, req.Expiry)
+	shortCode, err := repository.SetShortURL(ctx, srv, req.CustomShort, req.URL, expiry)
 	if err != nil {
 		if errors.Is(err, custom_errors.ErrShortKeyExists) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -82,7 +82,7 @@ func shortenURL(c *gin.Context, srv *service.Service){
 	
 	shortURL := config.AppConfig.Host + "/"+ shortCode
 
-	response := response{URL: req.URL, ShortURL : shortURL, Expiry: req.Expiry, XRateRemaining: remainingQuota, XRateLimitReset: time.Duration(resetAfter.Minutes())}
+	response := response{URL: req.URL, ShortURL : shortURL, Expiry: expiry, XRateRemaining: remainingQuota, XRateLimitReset: time.Duration(resetAfter.Minutes())}
 
 	c.JSON(http.StatusOK, response)
 

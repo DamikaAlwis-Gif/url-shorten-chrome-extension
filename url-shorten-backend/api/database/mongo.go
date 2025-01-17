@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"sync"
 	"time"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/DamikaAlwis-Gif/shorten-url-app/config"
 )
 
 type MongoDB struct{
@@ -25,7 +25,7 @@ func (db *MongoDB)InitDB(parentCtx context.Context) error{
 		ctx, cancel := context.WithTimeout(parentCtx, 10*time.Second)
 		defer cancel()
 
-		mongoURI := os.Getenv("MONGODB_URI")
+		mongoURI := config.AppConfig.MongoDBAddr
 		if mongoURI == "" {
 			initErr = fmt.Errorf("missing MONGODB_URI environment variable")
 			return

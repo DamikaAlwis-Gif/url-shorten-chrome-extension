@@ -9,10 +9,16 @@ import (
 type Config struct {
 	RedisDbAddr string
 	RedisDbPass string
+	RedisDbUsername string
 	AppPort  string
 	Host string
 	APIQuota   int
 	QuotaResetTime  time.Duration
+	MongoDBAddr string
+	MongoDBDatabaseName string
+	MongoDBCOllectionNameClicks string
+	MongoDBCollectionNameUrls string		
+
 	
 }
 var AppConfig *Config
@@ -25,7 +31,11 @@ func LoadConfig() *Config{
     Host:           getEnv("HOST", "localhost"),
     APIQuota:       getEnvAsInt("API_QUOTA", 10),
     QuotaResetTime: getEnvAsDuration("QUOTA_RESET_TIME", 30), 
-		
+		MongoDBAddr : getEnv("MONGODB_URI",""),
+		MongoDBDatabaseName: getEnv("MONGODB_DATABASE_NAME","url_shortner"),
+    MongoDBCollectionNameUrls:  getEnv("MONGODB_COLLECTION_NAME_URLS","urls"),
+    MongoDBCOllectionNameClicks: getEnv("MONGODB_COLLECTION_NAME_CLICKS","clicks"),
+		RedisDbUsername : getEnv("REDIS_DB_USERNAME","default"),
 	}
 	return AppConfig
 }
