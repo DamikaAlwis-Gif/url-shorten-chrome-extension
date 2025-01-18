@@ -13,7 +13,7 @@ func SetupRoutes(r *gin.Engine, srv *service.AppService){
 		shortenURL(c, srv.URLService, srv.RateLimitService)
 	})
 	r.GET("/:short_code", func(c *gin.Context){
-		resolveURL(c, srv.URLService)
+		resolveURL(c, srv.URLService, srv.ClickLogService)
 	})
 	r.GET("/", func(c *gin.Context){
 		c.JSON(200, gin.H{"message": "Welcome to the URL shortening service!"})

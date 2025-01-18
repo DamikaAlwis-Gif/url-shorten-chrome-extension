@@ -1,23 +1,24 @@
 package routes
 
 import (
-	// "context"
+	"context"
 	"errors"
+	"log"
 	// "fmt"
 	"net/http"
-	// "time"
+	"time"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/custom_errors"
 	// "github.com/DamikaAlwis-Gif/shorten-url-app/repository"
 	"github.com/DamikaAlwis-Gif/shorten-url-app/service"
 	"github.com/gin-gonic/gin"
 )
 
-func resolveURL(c *gin.Context, srv *service.URLService){
+func resolveURL(c *gin.Context, UrlSrv *service.URLService, clSrv *service.ClickLogService){
 	ctx := c.Request.Context()
 	shortCode := c.Param("short_code")
 
 	// Resolve the URL
-	originalURL , err := srv.ResolveShortURL(ctx, shortCode)
+	originalURL , err := UrlSrv.ResolveShortURL(ctx, shortCode)
 	
   if err != nil {
     if errors.Is(err, custom_errors.ErrShortURLNotFound) {
@@ -33,6 +34,20 @@ func resolveURL(c *gin.Context, srv *service.URLService){
     }
 
   }else{
+
+		go func() {
+    bgCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    defer cancel() // Ensure that the context is canceled when the task finishes
+
+    err := clSrv.LogClick(bgCtx, shortCode, c.ClientIP(), c.Request.UserAgent())
+    if err != nil {
+        log.Printf("Error logging click for short URL %s: %v", shortCode, err)
+    } else {
+        log.Printf("Published click for short URL %s from IP %s", shortCode, c.ClientIP())
+    }
+		}()
+
+		
 		c.Redirect(http.StatusMovedPermanently, originalURL)
 	}
 	
@@ -40,14 +55,3 @@ func resolveURL(c *gin.Context, srv *service.URLService){
 	
 }
 
-// go func(){
-
-	// 	logCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-  //   defer cancel()
-	// 	err := repository.LogClick(logCtx,srv, shortURL, c.ClientIP(), c.Request.UserAgent())
-	// 	if err!= nil {
-	// 		fmt.Printf("Error logging click for short URL %s: %v\n", shortURL, err)
-	// 	}
-	// }()
-
-	// redirect to the original url

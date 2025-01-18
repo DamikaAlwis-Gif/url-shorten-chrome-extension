@@ -39,7 +39,8 @@ func main(){
 	
 	dbRepo := repository.NewMongoRepository(mongoDB.GetDBClient())
 	cacheRepo := repository.NewRedisRepository(redis.GetDBClient())
-	srv := service.NewAppService(cacheRepo, dbRepo)
+	broker := repository.NewRedisBroker(redis.GetDBClient())
+	srv := service.NewAppService(cacheRepo, dbRepo, broker)
 
 	routes.SetupRoutes(r, srv)
 	r.Run(AppConfig.AppPort)

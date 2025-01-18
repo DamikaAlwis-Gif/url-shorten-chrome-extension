@@ -45,7 +45,7 @@ func (s *URLService) ResolveShortURL(ctx context.Context, shortCode string) (str
     }
 
     // Calculate the remaining TTL
-    expiry := urlDoc.Expiry.Sub(time.Now())
+    expiry := time.Until(urlDoc.Expiry)
     if expiry > 24*time.Hour {
         expiry = 24 * time.Hour // Cap the cache TTL to 24 hours
     }
