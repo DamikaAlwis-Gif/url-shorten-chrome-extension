@@ -35,17 +35,34 @@ func resolveURL(c *gin.Context, UrlSrv *service.URLService, clSrv *service.Click
 
   }else{
 
-		go func() {
-    bgCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-    defer cancel() // Ensure that the context is canceled when the task finishes
+		// go func() {
+    // bgCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    // defer cancel() // Ensure that the context is canceled when the task finishes
 
-    err := clSrv.LogClick(bgCtx, shortCode, c.ClientIP(), c.Request.UserAgent())
-    if err != nil {
-        log.Printf("Error logging click for short URL %s: %v", shortCode, err)
-    } else {
-        log.Printf("Published click for short URL %s from IP %s", shortCode, c.ClientIP())
-    }
-		}()
+    // err := clSrv.LogClick(bgCtx, shortCode, c.ClientIP(), c.Request.UserAgent())
+    // if err != nil {
+    //     log.Printf("Error logging click for short URL %s: %v", shortCode, err)
+    // } else {
+    //     log.Printf("Published click for short URL %s from IP %s", shortCode, c.ClientIP())
+    // }
+		// }()
+		// Extract data required for logging
+	clientIP := c.ClientIP()
+	userAgent := c.Request.UserAgent()
+
+	// Start logging in a background goroutine
+	go func(shortCode, clientIP, userAgent string) {
+		bgCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second) // Independent context
+		defer cancel()
+
+		err := clSrv.LogClick(bgCtx, shortCode, clientIP, userAgent)
+		if err != nil {
+			log.Printf("Error logging click for short URL %s: %v", shortCode, err)
+		} else {
+			log.Printf("Published click for short URL %s from IP %s", shortCode, clientIP)
+		}
+	}(shortCode, clientIP, userAgent) // Pass the extracted data as parameters to the goroutine
+
 
 		
 		c.Redirect(http.StatusMovedPermanently, originalURL)

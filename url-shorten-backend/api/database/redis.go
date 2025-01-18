@@ -28,6 +28,7 @@ func (r *Redis) InitDB(parentCtx context.Context) error {
       err = fmt.Errorf("missing REDIS_ADDR in environment variable")
       return
     }
+		
 		r.Client = redis.NewClient(&redis.Options{
 			Addr:     config.AppConfig.RedisDbAddr,  // Redis address (e.g., "localhost:6379")
 			Password: config.AppConfig.RedisDbPass,

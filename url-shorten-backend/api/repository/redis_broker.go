@@ -1,9 +1,10 @@
 package repository
-import (
-    "context"
-    "encoding/json"
-    "github.com/go-redis/redis/v8"
 
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/go-redis/redis/v8"
 )
 
 type RedisBroker struct{
@@ -23,12 +24,13 @@ func (rb *RedisBroker) Publish(ctx context.Context, streamName string, message i
         return err
     }
 		// use xadd to publish the message to the Redis stream
-		  _, err = rb.client.XAdd(ctx, &redis.XAddArgs{
+			data, err := rb.client.XAdd(ctx, &redis.XAddArgs{
         Stream: streamName,                  // Name of the stream
         Values: map[string]interface{}{     // Fields of the message
             "data": string(msgBytes),       // Store the JSON-encoded message
         },
     }).Result()
+		fmt.Print(data)
 
     return err
 }
