@@ -59,7 +59,7 @@ func main() {
             Group:    "my_consumer_group", // Group name
             Consumer: "consumer1",         // Consumer name (each consumer in the group should have a unique name)
             Streams:  []string{"click_logs", ">"},
-            Count:    1,   // Number of messages to read per request
+            Count:    5,   // Number of messages to read per request
             Block:    0,    // Block indefinitely until new messages arrive
         }).Result()
 
