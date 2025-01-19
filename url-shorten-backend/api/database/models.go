@@ -12,10 +12,17 @@ type ShortenURL struct{
 	IsCustom bool `bson:"is_custom"`
 }
 
+// type Click struct{
+// 	ShortURL string `bson:"short_url"`
+// 	Timestamp time.Time `bson:"timestamp"`
+// 	IPAddress string `bson:"ip_address"`
+// 	UserAgent string `bson:"user_agent"`
+// }
+
 type Click struct{
-	ShortURL string `bson:"short_url"`
-	Timestamp time.Time `bson:"timestamp"`
-	IPAddress string `bson:"ip_address"`
-	UserAgent string `bson:"user_agent"`
+	ShortURL string `json:"short_url"`
+	Timestamp time.Time `json:"timestamp"`
+	IPAddress string `json:"ip_address"`
+	UserAgent string `json:"user_agent"`
 }
 
