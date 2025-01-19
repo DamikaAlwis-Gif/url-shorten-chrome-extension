@@ -1,6 +1,7 @@
 package service
 
 import (
+    "errors"
 	"context"
 	"log"
 	"time"
@@ -64,22 +65,36 @@ func (s *URLService) ResolveShortURL(ctx context.Context, shortCode string) (str
 func (s *URLService) CreateShortURL(ctx context.Context, shortCode string, isCustom bool, originalURL string, expiry time.Duration) (string, error){
     
     if (!isCustom) {
-        var err error
-        shortCode , err = helpers.GenarateShortCode(6)
-        if err!= nil {
-            return "", err
+        
+        retryCount := 3
+        for i := 0; i < retryCount ; i++ {
+            shortCode = helpers.GenerateShortURL(8)
+            err := s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry)
+            if err == nil {
+                break
+            }
+            if !errors.Is(err, custom_errors.ErrShortKeyExists){
+                return "", err
+            }
+            log.Printf("Short code %s already exists, retrying... (%d/%d)", shortCode, i+1, retryCount)
+            if i == retryCount - 1 {
+                return "", fmt.Errorf("failed to generate unique short code after %d retries", retryCount)
+            }
         }
-    }
-    // save the original url in DB
-    err := s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry)
-    if err!= nil {
+       
+    }else {
+        // save the original url in DB
+        err := s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry)
+        if err!= nil {
         return "", fmt.Errorf("error saving original url to db: %w", err)
+        }
+
     }
 
     // save the original  url in cache 
-    err = s.cacheRepo.SaveOriginalURL(ctx, shortCode, originalURL, expiry)
+    err := s.cacheRepo.SaveOriginalURL(ctx, shortCode, originalURL, expiry)
     if err!= nil {
-        return "", err
+        log.Printf("Error saving to cache: %v", err)
     }
 
     return shortCode, nil
