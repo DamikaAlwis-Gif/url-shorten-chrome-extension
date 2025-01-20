@@ -10,6 +10,7 @@ type ShortenURL struct{
 	CreatedAt time.Time `bson:"created_at"`
 	Expiry time.Time `bson:"expiry"`
 	IsCustom bool `bson:"is_custom"`
+	UserID string `bson:"user_id"`
 }
 
 // type Click struct{

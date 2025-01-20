@@ -10,6 +10,6 @@ import (
 type DBRepository interface{
 	
 	FindOriginalURLDetailsByShortCode(ctx context.Context, shortCode string) (*database.ShortenURL, error)
-	SaveOriginalURL(ctx context.Context, shortCode, originalURL string, isCustom bool, expiry time.Duration) error
+	SaveOriginalURL(ctx context.Context, shortCode, originalURL string, isCustom bool, expiry time.Duration, userID string) error
 	
 }

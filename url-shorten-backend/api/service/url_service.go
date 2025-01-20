@@ -62,7 +62,7 @@ func (s *URLService) ResolveShortURL(ctx context.Context, shortCode string) (str
 }
 
 
-func (s *URLService) CreateShortURL(ctx context.Context, shortCode string, isCustom bool, originalURL string, expiry time.Duration) (string, error){
+func (s *URLService) CreateShortURL(ctx context.Context, shortCode string, isCustom bool, originalURL string, expiry time.Duration, userID string) (string, error){
     
     if (!isCustom) {
         var err error
@@ -73,7 +73,7 @@ func (s *URLService) CreateShortURL(ctx context.Context, shortCode string, isCus
             if err!= nil {
                 return "", fmt.Errorf("error generating short URL: %w", err)
             }
-            err = s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry)
+            err = s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry, userID)
             if err == nil {
                 break
             }
@@ -88,7 +88,7 @@ func (s *URLService) CreateShortURL(ctx context.Context, shortCode string, isCus
        
     }else {
         // save the original url in DB
-        err := s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry)
+        err := s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry, userID)
         if err!= nil {
         return "", fmt.Errorf("error saving original url to db: %w", err)
         }

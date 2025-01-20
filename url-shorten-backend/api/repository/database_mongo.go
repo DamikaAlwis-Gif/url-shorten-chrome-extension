@@ -42,7 +42,12 @@ func (repo *MongoRepository) FindOriginalURLDetailsByShortCode(ctx context.Conte
 	return &urlDoc, nil
 }
 
-func (repo *MongoRepository) SaveOriginalURL(ctx context.Context, shortCode, originalURL string, isCustom bool, expiry time.Duration) error{
+func (repo *MongoRepository) SaveOriginalURL(
+	ctx context.Context, 
+	shortCode, originalURL string,
+	isCustom bool,
+	expiry time.Duration,
+	userID string) error{
 	collection := repo.client.Database(config.AppConfig.MongoDBDatabaseName).Collection(config.AppConfig.MongoDBCollectionNameUrls)
 	
 		 urlDoc := database.ShortenURL{
@@ -51,6 +56,7 @@ func (repo *MongoRepository) SaveOriginalURL(ctx context.Context, shortCode, ori
         CreatedAt:   time.Now(),
         Expiry:      time.Now().Add(expiry),
 				IsCustom: isCustom,
+				UserID: userID,
     }
 
     _, err := collection.InsertOne(ctx, urlDoc)

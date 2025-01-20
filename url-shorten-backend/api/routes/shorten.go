@@ -32,7 +32,9 @@ type response struct {
 	XRateLimitReset    time.Duration   `json:"rate_limit_reset"` 
 }
 
-
+const (
+	userIDHeaderKey = "X-User-ID"
+)
 
 
 func shortenURL(c *gin.Context, urlSrv *service.URLService, rateLimitSrv *service.RateLimitService){
@@ -40,12 +42,16 @@ func shortenURL(c *gin.Context, urlSrv *service.URLService, rateLimitSrv *servic
 	var req request
 	// get http request context
 	ctx := c.Request.Context()
-
+	
 	// validate request
 	if err := c.ShouldBindJSON(&req); err!= nil {
     c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
     return
   }
+
+	// get the user id
+	userID := c.GetHeader(userIDHeaderKey)
+
 	isCustom := req.CustomShort != ""
 	// check if the input is an actual url
 	if !govalidator.IsURL(req.URL){
@@ -64,7 +70,7 @@ func shortenURL(c *gin.Context, urlSrv *service.URLService, rateLimitSrv *servic
 	expiry := time.Duration(req.Expiry) * time.Hour // convert the hours
 	// set the short url in persistent storage and cache 
 	// shortCode, err := repository.SetShortURL(ctx, srv, req.CustomShort, req.URL, expiry)
-	shortCode , err := urlSrv.CreateShortURL(ctx, req.CustomShort,isCustom,req.URL, expiry )
+	shortCode , err := urlSrv.CreateShortURL(ctx, req.CustomShort,isCustom,req.URL, expiry, userID )
 	if err != nil {
 		if errors.Is(err, custom_errors.ErrShortKeyExists) {
 			fmt.Print(err.Error())
