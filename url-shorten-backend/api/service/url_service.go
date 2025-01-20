@@ -65,11 +65,15 @@ func (s *URLService) ResolveShortURL(ctx context.Context, shortCode string) (str
 func (s *URLService) CreateShortURL(ctx context.Context, shortCode string, isCustom bool, originalURL string, expiry time.Duration) (string, error){
     
     if (!isCustom) {
-        
+        var err error
         retryCount := 3
         for i := 0; i < retryCount ; i++ {
-            shortCode = helpers.GenerateShortURL(8)
-            err := s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry)
+            
+            shortCode, err = helpers.GenerateShortURL(originalURL)
+            if err!= nil {
+                return "", fmt.Errorf("error generating short URL: %w", err)
+            }
+            err = s.dbRepo.SaveOriginalURL(ctx, shortCode, originalURL, isCustom, expiry)
             if err == nil {
                 break
             }
